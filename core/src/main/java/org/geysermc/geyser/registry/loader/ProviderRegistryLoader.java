@@ -29,6 +29,7 @@ import org.geysermc.geyser.api.bedrock.camera.CameraFade;
 import org.geysermc.geyser.api.bedrock.camera.CameraPosition;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.NonVanillaCustomBlockData;
+import org.geysermc.geyser.api.block.custom.component.ConnectionRuleComponent;
 import org.geysermc.geyser.api.block.custom.component.CustomBlockComponents;
 import org.geysermc.geyser.api.block.custom.component.GeometryComponent;
 import org.geysermc.geyser.api.block.custom.component.MaterialInstance;
@@ -106,6 +107,7 @@ import org.geysermc.geyser.item.custom.impl.predicates.GeyserCustomModelDataPred
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserHasComponentPredicate;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserRangeDispatchPredicate;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserTrimMaterialPredicate;
+import org.geysermc.geyser.level.block.GeyserConnectionRuleComponent;
 import org.geysermc.geyser.level.block.GeyserCustomBlockComponents;
 import org.geysermc.geyser.level.block.GeyserCustomBlockData;
 import org.geysermc.geyser.level.block.GeyserGeometryComponent;
@@ -145,6 +147,7 @@ public class ProviderRegistryLoader implements RegistryLoader<Map<Class<?>, Prov
         providers.put(NonVanillaCustomBlockData.Builder.class, args -> new GeyserNonVanillaCustomBlockData.Builder());
         providers.put(MaterialInstance.Builder.class, args -> new GeyserMaterialInstance.Builder());
         providers.put(GeometryComponent.Builder.class, args -> new GeyserGeometryComponent.Builder());
+        providers.put(ConnectionRuleComponent.Builder.class, args -> new GeyserConnectionRuleComponent.Builder());
 
         // misc
         providers.put(EventRegistrar.class, args -> new GeyserEventRegistrar(args[0]));

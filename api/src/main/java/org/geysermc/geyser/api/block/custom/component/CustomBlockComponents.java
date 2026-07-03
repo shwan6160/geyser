@@ -152,6 +152,15 @@ public interface CustomBlockComponents {
     @Nullable TransformationComponent transformation();
 
     /**
+     * Gets the connection rule component.
+     * Equivalent to "minecraft:connection_rule"
+     *
+     * @return the connection rule
+     * @since 2.9.5
+     */
+    @Nullable ConnectionRuleComponent connectionRule();
+
+    /**
      * Gets the unit cube component
      * Equivalent to "minecraft:unit_cube"
      *
@@ -323,6 +332,16 @@ public interface CustomBlockComponents {
          * @since 2.2.0
          */
         @This Builder transformation(TransformationComponent transformation);
+
+        /**
+         * Sets the connection rule of the block.
+         *
+         * @see CustomBlockComponents#connectionRule()
+         * @param connectionRule the connection rule to set
+         * @return this builder
+         * @since 2.9.5
+         */
+        @This Builder connectionRule(@Nullable ConnectionRuleComponent connectionRule);
 
         /**
          * Sets the unit cube value, equivalent to setting a full block geometry.

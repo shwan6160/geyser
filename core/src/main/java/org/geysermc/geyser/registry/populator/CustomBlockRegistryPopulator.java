@@ -40,6 +40,7 @@ import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockPermutation;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.api.block.custom.component.BoxComponent;
+import org.geysermc.geyser.api.block.custom.component.ConnectionRuleComponent;
 import org.geysermc.geyser.api.block.custom.component.CustomBlockComponents;
 import org.geysermc.geyser.api.block.custom.component.GeometryComponent;
 import org.geysermc.geyser.api.block.custom.component.MaterialInstance;
@@ -383,7 +384,7 @@ public class CustomBlockRegistryPopulator {
      * @param components the custom block components to convert
      * @return the NBT representation of the provided custom block components
      */
-    private static NbtMap convertComponents(CustomBlockComponents components) {
+    static NbtMap convertComponents(CustomBlockComponents components) {
         if (components == null) {
             return NbtMap.EMPTY;
         }
@@ -501,6 +502,19 @@ public class CustomBlockRegistryPopulator {
                     .putFloat("TY", transformationComponent.ty())
                     .putFloat("TZ", transformationComponent.tz())
                     .build());
+        }
+
+        ConnectionRuleComponent connectionRule = components.connectionRule();
+        if (connectionRule != null) {
+            NbtMapBuilder connectionRuleBuilder = NbtMap.builder()
+                    .putString("accepts_connections_from", connectionRule.acceptsConnectionsFrom().bedrockName());
+            Set<ConnectionRuleComponent.Direction> enabledDirections = connectionRule.enabledDirections();
+            if (enabledDirections != null) {
+                connectionRuleBuilder.putList("enabled_directions", NbtType.STRING, enabledDirections.stream()
+                        .map(ConnectionRuleComponent.Direction::bedrockName)
+                        .toList());
+            }
+            builder.putCompound("minecraft:connection_rule", connectionRuleBuilder.build());
         }
 
         // place_air is not an actual component

@@ -37,6 +37,7 @@ import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockPermutation;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.api.block.custom.component.BoxComponent;
+import org.geysermc.geyser.api.block.custom.component.ConnectionRuleComponent;
 import org.geysermc.geyser.api.block.custom.component.CustomBlockComponents;
 import org.geysermc.geyser.api.block.custom.component.GeometryComponent;
 import org.geysermc.geyser.api.block.custom.component.MaterialInstance;
@@ -372,6 +373,17 @@ public class BlockMappingsReader_v1 implements MappingsReader<String, CustomBloc
             builder.transformation(new TransformationComponent(rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformX, transformY, transformZ));
         }
 
+        JsonObject components = node.getAsJsonObject("components");
+        JsonObject connectionRule = null;
+        if (components != null && components.get("connection_rule") instanceof JsonObject rule) {
+            connectionRule = rule;
+        } else if (node.get("connection_rule") instanceof JsonObject rule) {
+            connectionRule = rule;
+        }
+        if (connectionRule != null) {
+            builder.connectionRule(createConnectionRuleComponent(connectionRule));
+        }
+
         if (node.has("unit_cube")) {
             builder.geometry(GeometryComponent.builder()
                 .identifier("minecraft:geometry.full_block")
@@ -409,6 +421,37 @@ public class BlockMappingsReader_v1 implements MappingsReader<String, CustomBloc
         }
 
         return builder.build();
+    }
+
+    private ConnectionRuleComponent createConnectionRuleComponent(JsonObject node) {
+        ConnectionRuleComponent.Builder builder = ConnectionRuleComponent.builder();
+        if (node.has("accepts_connections_from")) {
+            builder.acceptsConnectionsFrom(readAcceptsConnectionsFrom(node.get("accepts_connections_from").getAsString()));
+        }
+        if (node.get("enabled_directions") instanceof JsonArray directions) {
+            Set<ConnectionRuleComponent.Direction> enabledDirections = EnumSet.noneOf(ConnectionRuleComponent.Direction.class);
+            directions.forEach(direction -> enabledDirections.add(readConnectionDirection(direction.getAsString())));
+            builder.enabledDirections(enabledDirections);
+        }
+        return builder.build();
+    }
+
+    private ConnectionRuleComponent.AcceptsConnectionsFrom readAcceptsConnectionsFrom(String value) {
+        for (ConnectionRuleComponent.AcceptsConnectionsFrom acceptsConnectionsFrom : ConnectionRuleComponent.AcceptsConnectionsFrom.values()) {
+            if (acceptsConnectionsFrom.bedrockName().equals(value)) {
+                return acceptsConnectionsFrom;
+            }
+        }
+        throw new IllegalArgumentException("Invalid connection_rule accepts_connections_from value: " + value);
+    }
+
+    private ConnectionRuleComponent.Direction readConnectionDirection(String value) {
+        for (ConnectionRuleComponent.Direction direction : ConnectionRuleComponent.Direction.values()) {
+            if (direction.bedrockName().equals(value)) {
+                return direction;
+            }
+        }
+        throw new IllegalArgumentException("Invalid connection_rule enabled_directions value: " + value);
     }
 
     /**

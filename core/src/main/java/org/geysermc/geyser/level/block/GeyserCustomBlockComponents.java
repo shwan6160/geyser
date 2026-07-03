@@ -49,6 +49,7 @@ public class GeyserCustomBlockComponents implements CustomBlockComponents {
     Integer lightEmission;
     Integer lightDampening;
     TransformationComponent transformation;
+    ConnectionRuleComponent connectionRule;
     boolean placeAir;
     Set<String> tags;
 
@@ -74,6 +75,7 @@ public class GeyserCustomBlockComponents implements CustomBlockComponents {
         this.lightEmission = builder.lightEmission;
         this.lightDampening = builder.lightDampening;
         this.transformation = builder.transformation;
+        this.connectionRule = builder.connectionRule;
         this.placeAir = builder.placeAir;
         if (builder.tags.isEmpty()) {
             this.tags = Set.of();
@@ -153,6 +155,11 @@ public class GeyserCustomBlockComponents implements CustomBlockComponents {
     }
 
     @Override
+    public ConnectionRuleComponent connectionRule() {
+        return connectionRule;
+    }
+
+    @Override
     public boolean unitCube() {
         return geometry.identifier().equals("minecraft:geometry.full_block");
     }
@@ -179,6 +186,7 @@ public class GeyserCustomBlockComponents implements CustomBlockComponents {
         protected Integer lightEmission;
         protected Integer lightDampening;
         protected TransformationComponent transformation;
+        protected ConnectionRuleComponent connectionRule;
         protected boolean unitCube = false;
         protected boolean placeAir = false;
         protected Set<String> tags = new HashSet<>();
@@ -342,6 +350,12 @@ public class GeyserCustomBlockComponents implements CustomBlockComponents {
                 throw new IllegalArgumentException("Rotation of transformation must be a multiple of 90 degrees.");
             }
             this.transformation = transformation;
+            return this;
+        }
+
+        @Override
+        public Builder connectionRule(@Nullable ConnectionRuleComponent connectionRule) {
+            this.connectionRule = connectionRule;
             return this;
         }
 
