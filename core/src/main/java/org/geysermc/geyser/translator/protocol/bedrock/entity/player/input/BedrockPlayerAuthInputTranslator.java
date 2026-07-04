@@ -70,13 +70,18 @@ import java.util.Set;
 
 @Translator(packet = PlayerAuthInputPacket.class)
 public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<PlayerAuthInputPacket> {
+    private static final boolean FORCE_GEYSER_BOAT_SIMULATION = Boolean.getBoolean("geyser.debug.force-geyser-boat-simulation");
 
     @Override
     public void translate(GeyserSession session, PlayerAuthInputPacket packet) {
         SessionPlayerEntity entity = session.getPlayerEntity();
 
         session.setClientTicks(packet.getTick());
-        session.setInClientPredictedVehicle(packet.getInputData().contains(PlayerAuthInputData.IN_CLIENT_PREDICTED_IN_VEHICLE) && entity.getVehicle() != null && GameProtocol.is26_10orHigher(session.protocolVersion()));
+        boolean forceGeyserBoatSimulation = FORCE_GEYSER_BOAT_SIMULATION && entity.getVehicle() instanceof BoatEntity;
+        session.setInClientPredictedVehicle(packet.getInputData().contains(PlayerAuthInputData.IN_CLIENT_PREDICTED_IN_VEHICLE)
+            && entity.getVehicle() != null
+            && !forceGeyserBoatSimulation
+            && GameProtocol.is26_10orHigher(session.protocolVersion()));
 
         boolean wasJumping = session.getInputCache().wasJumping();
         session.getInputCache().processInputs(entity, packet);

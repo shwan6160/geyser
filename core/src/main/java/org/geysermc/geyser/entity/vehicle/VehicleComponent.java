@@ -35,8 +35,10 @@ import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
+import org.cloudburstmc.protocol.bedrock.packet.MoveEntityAbsolutePacket;
 import org.cloudburstmc.protocol.bedrock.packet.MoveEntityDeltaPacket;
 import org.geysermc.erosion.util.BlockPositionIterator;
+import org.geysermc.geyser.entity.type.BoatEntity;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.type.LivingEntity;
 import org.geysermc.geyser.level.block.BlockStateValues;
@@ -63,6 +65,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.Serve
 public class VehicleComponent<T extends Entity & ClientVehicle> {
     private static final ObjectDoublePair<Fluid> EMPTY_FLUID_PAIR = ObjectDoublePair.of(Fluid.EMPTY, 0.0);
     private static final float MAX_LOGICAL_FLUID_HEIGHT = 8.0f / BlockStateValues.NUM_FLUID_LEVELS;
+    private static final boolean FORCE_BOAT_ABSOLUTE_SYNC = Boolean.getBoolean("geyser.debug.force-boat-absolute-sync");
     private static final float BASE_SLIPPERINESS_CUBED = 0.6f * 0.6f * 0.6f;
     private static final float MIN_VELOCITY = 0.003f;
 
@@ -798,7 +801,17 @@ public class VehicleComponent<T extends Entity & ClientVehicle> {
         }
 
         if (!moveEntityDeltaPacket.getFlags().isEmpty()) {
-            vehicle.getSession().sendUpstreamPacket(moveEntityDeltaPacket);
+            if (FORCE_BOAT_ABSOLUTE_SYNC && vehicle instanceof BoatEntity) {
+                MoveEntityAbsolutePacket moveEntityAbsolutePacket = new MoveEntityAbsolutePacket();
+                moveEntityAbsolutePacket.setRuntimeEntityId(vehicle.geyserId());
+                moveEntityAbsolutePacket.setPosition(newBedrockPos);
+                moveEntityAbsolutePacket.setRotation(vehicle.bedrockRotation());
+                moveEntityAbsolutePacket.setOnGround(vehicle.isOnGround());
+                moveEntityAbsolutePacket.setTeleported(true);
+                vehicle.getSession().sendUpstreamPacket(moveEntityAbsolutePacket);
+            } else {
+                vehicle.getSession().sendUpstreamPacket(moveEntityDeltaPacket);
+            }
         }
 
         sendServerboundMoveVehiclePacket(javaPos);
