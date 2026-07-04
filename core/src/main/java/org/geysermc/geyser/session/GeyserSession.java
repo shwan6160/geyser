@@ -629,6 +629,12 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private boolean inClientPredictedVehicle;
 
     /**
+     * Keeps boat ice compensation active briefly after leaving an ice block, covering gapped ice highways.
+     */
+    @Setter
+    private int boatIceBoostTicks;
+
+    /**
      * Store the last time the player interacted. Used to fix a right-click spam bug.
      * See <a href="https://github.com/GeyserMC/Geyser/issues/503">this</a> for context.
      */

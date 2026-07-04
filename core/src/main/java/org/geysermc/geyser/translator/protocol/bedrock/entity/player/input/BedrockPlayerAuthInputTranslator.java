@@ -46,6 +46,8 @@ import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.entity.vehicle.ClientVehicle;
 import org.geysermc.geyser.entity.vehicle.HorseVehicleComponent;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.session.GeyserSession;
@@ -71,15 +73,20 @@ import java.util.Set;
 @Translator(packet = PlayerAuthInputPacket.class)
 public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<PlayerAuthInputPacket> {
     private static final boolean FORCE_GEYSER_BOAT_SIMULATION = Boolean.getBoolean("geyser.debug.force-geyser-boat-simulation");
+    private static final int BOAT_ICE_BOOST_LINGER_TICKS = 10;
 
     @Override
     public void translate(GeyserSession session, PlayerAuthInputPacket packet) {
         SessionPlayerEntity entity = session.getPlayerEntity();
 
         session.setClientTicks(packet.getTick());
-        boolean forceGeyserBoatSimulation = FORCE_GEYSER_BOAT_SIMULATION && entity.getVehicle() instanceof BoatEntity;
+        Entity vehicle = entity.getVehicle();
+        if (!(vehicle instanceof BoatEntity)) {
+            session.setBoatIceBoostTicks(0);
+        }
+        boolean forceGeyserBoatSimulation = FORCE_GEYSER_BOAT_SIMULATION && vehicle instanceof BoatEntity && updateBoatIceBoostTicks(session, vehicle);
         session.setInClientPredictedVehicle(packet.getInputData().contains(PlayerAuthInputData.IN_CLIENT_PREDICTED_IN_VEHICLE)
-            && entity.getVehicle() != null
+            && vehicle != null
             && !forceGeyserBoatSimulation
             && GameProtocol.is26_10orHigher(session.protocolVersion()));
 
@@ -244,6 +251,30 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
             session.setSteeringLeft(up || inputData.contains(PlayerAuthInputData.PADDLE_RIGHT));
             session.setSteeringRight(up || inputData.contains(PlayerAuthInputData.PADDLE_LEFT));
         }
+    }
+
+    private static boolean updateBoatIceBoostTicks(GeyserSession session, Entity vehicle) {
+        if (isBoatOnIce(session, vehicle)) {
+            session.setBoatIceBoostTicks(BOAT_ICE_BOOST_LINGER_TICKS);
+        } else if (session.getBoatIceBoostTicks() > 0) {
+            session.setBoatIceBoostTicks(session.getBoatIceBoostTicks() - 1);
+        }
+        return session.getBoatIceBoostTicks() > 0;
+    }
+
+    private static boolean isBoatOnIce(GeyserSession session, Entity vehicle) {
+        Vector3f position = vehicle.position();
+        int y = GenericMath.floor(position.getY() - 0.1f);
+        return isIce(session, position.getX(), y, position.getZ())
+            || isIce(session, position.getX() + 0.4f, y, position.getZ())
+            || isIce(session, position.getX() - 0.4f, y, position.getZ())
+            || isIce(session, position.getX(), y, position.getZ() + 0.4f)
+            || isIce(session, position.getX(), y, position.getZ() - 0.4f);
+    }
+
+    private static boolean isIce(GeyserSession session, float x, int y, float z) {
+        BlockState state = session.getGeyser().getWorldManager().blockAt(session, GenericMath.floor(x), y, GenericMath.floor(z));
+        return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE) || state.is(Blocks.BLUE_ICE) || state.is(Blocks.FROSTED_ICE);
     }
 
     private static void processItemUseTransaction(GeyserSession session, ItemUseTransaction transaction) {

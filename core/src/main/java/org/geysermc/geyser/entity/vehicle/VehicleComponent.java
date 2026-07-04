@@ -801,7 +801,7 @@ public class VehicleComponent<T extends Entity & ClientVehicle> {
         }
 
         if (!moveEntityDeltaPacket.getFlags().isEmpty()) {
-            if (FORCE_BOAT_ABSOLUTE_SYNC && vehicle instanceof BoatEntity) {
+            if (FORCE_BOAT_ABSOLUTE_SYNC && vehicle instanceof BoatEntity && vehicle.getSession().getBoatIceBoostTicks() > 0) {
                 MoveEntityAbsolutePacket moveEntityAbsolutePacket = new MoveEntityAbsolutePacket();
                 moveEntityAbsolutePacket.setRuntimeEntityId(vehicle.geyserId());
                 moveEntityAbsolutePacket.setPosition(newBedrockPos);

@@ -44,9 +44,13 @@ import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.translator.collision.BlockCollision;
 import org.geysermc.geyser.util.BlockUtils;
+import org.geysermc.geyser.util.MathUtils;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
 
 public class BoatVehicleComponent extends VehicleComponent<BoatEntity> {
+    private static final float ICE_BOAT_TURN_MULTIPLIER = getFloatProperty("geyser.debug.boat-ice-turn-multiplier", 0.35f);
+    private static final float ICE_BOAT_MAX_DELTA_ROTATION = getFloatProperty("geyser.debug.boat-ice-max-delta-rotation", 4.0f);
+
     private Status status, oldStatus;
     private double waterLevel;
     private float landFriction;
@@ -57,6 +61,18 @@ public class BoatVehicleComponent extends VehicleComponent<BoatEntity> {
         super(vehicle, stepHeight);
 
         this.gravity = 0.04;
+    }
+
+    private static float getFloatProperty(String property, float defaultValue) {
+        String value = System.getProperty(property);
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Float.parseFloat(value);
+        } catch (NumberFormatException ignored) {
+            return defaultValue;
+        }
     }
 
     @Override
@@ -151,8 +167,13 @@ public class BoatVehicleComponent extends VehicleComponent<BoatEntity> {
         boolean left = input.getX() > 0.35;
         boolean right = input.getX() < -0.35;
 
-        if (left) this.deltaRotation--;
-        if (right) this.deltaRotation++;
+        boolean iceBoostActive = vehicle.getSession().getBoatIceBoostTicks() > 0;
+        float turnMultiplier = iceBoostActive ? ICE_BOAT_TURN_MULTIPLIER : 1.0f;
+        if (left) this.deltaRotation -= turnMultiplier;
+        if (right) this.deltaRotation += turnMultiplier;
+        if (iceBoostActive) {
+            this.deltaRotation = MathUtils.clamp(this.deltaRotation, -ICE_BOAT_MAX_DELTA_ROTATION, ICE_BOAT_MAX_DELTA_ROTATION);
+        }
 
         if (right != left && !up && !down) acceleration += 0.005F;
 
